@@ -6,6 +6,8 @@ logger = logging.getLogger()
 from config import check_args,get_args
 from src.util import create_entrels,create_pos_neg_ids
 from src.data import Dictionary
+from prebuild import create_dataset
+from src.data import read_all_triples
 
 def main(args):
     # create entities
@@ -15,6 +17,7 @@ def main(args):
     relations_file = os.path.join(result_dir,"relations.txt")
     if not os.path.exists(entities_file) or not os.path.exists(relations_file):
         create_entrels(dataset_dir,result_dir)
+    logger.info("The entities and relations saved in path: %s and %s ."%(entities_file,relations_file))
     # load dictionary
     ent_filename = os.path.join(result_dir,"entities.txt")
     ent_dict = Dictionary.load(ent_filename)
@@ -23,12 +26,19 @@ def main(args):
     # create dataset
     tags_list = ["train","valid","test"]
     for tag_name in tags_list:
-        save_filename = os.path.join(result_dir,"%s.txt"%tag_name)
+        save_filename = os.path.join(result_dir,"%s2id.txt"%tag_name)
         if not os.path.exists(save_filename):
             load_filename = os.path.join(dataset_dir,"%s.txt"%tag_name)
             create_pos_neg_ids(load_filename,save_filename,ent_dict,rel_dict,True)
-    # resource rank
-
+        logger.info("The positive and negative tags saved in path: %s ."%(save_filename))        
+    # resource rank build 
+    subgraphs_path = os.path.join(result_dir,"subGraphs")
+    if not os.path.exists(subgraphs_path):
+        file_path = [os.path.join(result_dir,"%s2id.txt"%tag) for tag in tags_list]
+        data_dict = read_all_triples(file_path)
+        os.makedirs(subgraphs_path)
+        create_dataset(data_dict,entities_file,subgraphs_path,depth=args.depth,workers = args.workers)
+    logger.info("The nodes graph saved in path: %s ."%(subgraphs_path))
 if __name__ == "__main__":
     args = get_args()
     check_args(args)

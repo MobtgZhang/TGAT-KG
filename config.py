@@ -7,6 +7,8 @@ def get_args():
     parser.add_argument("--result-dir",default="./result",type=str)
     parser.add_argument("--dataset",default="fb15k",type=str)
     parser.add_argument("--log-dir",default="./log",type=str)
+    parser.add_argument("--depth",default=4,type=int)
+    parser.add_argument("--workers",default=10,type=int)
     args = parser.parse_args()
     return args
 def check_args(args):
