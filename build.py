@@ -6,8 +6,7 @@ logger = logging.getLogger()
 from config import check_args,get_args
 from src.util import create_entrels,create_pos_neg_ids
 from src.data import Dictionary
-from prebuild import create_dataset
-from src.data import read_all_triples
+from src.res_rank import read_all_triples,create_page_rank
 
 def main(args):
     # create entities
@@ -32,13 +31,13 @@ def main(args):
             create_pos_neg_ids(load_filename,save_filename,ent_dict,rel_dict,True)
         logger.info("The positive and negative tags saved in path: %s ."%(save_filename))        
     # resource rank build 
-    subgraphs_path = os.path.join(result_dir,"subGraphs")
-    if not os.path.exists(subgraphs_path):
+    entityRank_path = os.path.join(result_dir,"entityRank")
+    if not os.path.exists(entityRank_path):
         file_path = [os.path.join(result_dir,"%s2id.txt"%tag) for tag in tags_list]
         data_dict = read_all_triples(file_path)
-        os.makedirs(subgraphs_path)
-        create_dataset(data_dict,entities_file,subgraphs_path,depth=args.depth,workers = args.workers)
-    logger.info("The nodes graph saved in path: %s ."%(subgraphs_path))
+        os.makedirs(entityRank_path)
+        create_page_rank(data_dict,entities_file,entityRank_path,depth=args.depth,workers=args.workers)
+    logger.info("The nodes graph saved in path: %s ."%(entityRank_path))
 if __name__ == "__main__":
     args = get_args()
     check_args(args)
