@@ -1,0 +1,9 @@
+emb_dim: 20
+k_fa: 50
+fa_rho: 0.3
+fa_alpha: 0.4
+fa_dropout: 0.2
+k_pr: 100
+pr_alpha: 0.5
+pr_beta: 0.6
+pr_dropout: 0.2

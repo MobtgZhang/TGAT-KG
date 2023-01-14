@@ -16,6 +16,7 @@ class FNNNet(nn.Module):
         return self.op(hid)
 class KGTConv(nn.Module):
     def __init__(self,config):
+        super(KGTConv,self).__init__()
         self.num_ents = config.num_ents
         self.num_rels = config.num_rels
         self.emb_dim = config.emb_dim
@@ -32,7 +33,20 @@ class KGTConv(nn.Module):
         self.fa_net = FAPagateNet(config.k_fa,config.fa_rho,config.fa_alpha,config.fa_dropout)
         self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels)
         self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
-    def forward(self,head,rel,tail):
-        pass
+    def forward(self,head,rel,tail,edge_index):
+        print(head)
+        print(tail)
+        print(self.num_ents,self.num_rels)
+        h_emb = self.ent_emb(head)
+        t_emb = self.ent_emb(tail)
+        exit()
+        h_emb = self.appnet(h_emb,edge_index)
+        t_emb = self.appnet(h_emb,edge_index,backward=True)
+        print(h_emb.shape,t_emb.shape)
     def graph_forward(self,x, edge_index):
-        pass
+        x_emb = self.ent_emb(x)
+        print(x_emb.shape,edge_index.shape)
+        #e_fea = self.fa_net(x_emb,edge_index)
+        app_fea = self.appnet(x_emb,edge_index)
+        print(app_fea.shape)
+        

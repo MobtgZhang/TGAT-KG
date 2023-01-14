@@ -4,7 +4,6 @@ import numpy as np
 import torch
 from torch_geometric.data import Data
 
-
 from .data import Dictionary
 
 def create_entrels(data_dir,result_dir):
@@ -78,6 +77,7 @@ def create_pos_neg_ids(load_filename,save_filename,ent_dict,rel_dict,generate_ne
 def build_graph(result_dir,tags_list):
     edge_index = []
     edge_attr = []
+    #node_index = []
     for tag in tags_list:
         load_filename = os.path.join(result_dir,tag+"2id.txt")
         with open(load_filename,mode="r",encoding="utf-8") as rfp:
@@ -87,10 +87,13 @@ def build_graph(result_dir,tags_list):
                     head,rel,tail = out[:3]
                     edge_index.append([head,tail])
                     edge_attr.append(rel)
+                    #node_index.append(head)
+                    #node_index.append(tail)
                 else:
                     pass
-    edge_index = np.array(edge_index,dtype=np.int64)
-    edge_attr = np.array(edge_attr,dtype=np.int64)
+    edge_index = torch.tensor(edge_index,dtype=torch.long).T
+    edge_attr = torch.tensor(edge_attr,dtype=torch.long)
+    #node_index = torch.tensor(node_index,dtype=torch.long)
     graph = Data(edge_index=edge_index,edge_attr=edge_attr)
     return graph
 def load_dataset(file_name):
