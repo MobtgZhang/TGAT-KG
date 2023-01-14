@@ -1,13 +1,40 @@
 import os
 import time
 import logging
-logger = logging.getLogger()
+import numpy as np
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from torch_geometric.data import Data
 
-from config import check_args,get_args
+from config import check_args,get_args,load_config
+from src.data import Dictionary
+from src.utils import build_graph,load_dataset
+from src.model import KGTConv
 
 def main(args):
-    pass
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    result_dir = os.path.join(args.result_dir,args.dataset)
+    # create dataset 
+    load_train_file = os.path.join(result_dir,"train2id.txt")
+    load_valid_file = os.path.join(result_dir,"valid2id.txt")
+    train_set = load_dataset(load_train_file)
+    valid_set = load_dataset(load_valid_file)
+    # create the graph
+    train_loader = DataLoader(train_set,batch_size=args.batch_size,shuffle=True)
+    test_loader = DataLoader(valid_set,batch_size=args.batch_size,shuffle=True)
+    # load config and create model
+    config_file = os.path.join(args.config_dir,args.model_name+".yaml")
+    config = load_config(config_file)
+    model = KGTConv(config)
+    loss = nn.CrossEntropyLoss()
+    for epoch in range(args.epoches):
+        for item in train_loader:
+            head,rel,tail,target = item
+            exit()
+    #graph = build_graph(result_dir,["train","valid"])
+    #print(graph)
+    
 if __name__ == "__main__":
     args = get_args()
     check_args(args)

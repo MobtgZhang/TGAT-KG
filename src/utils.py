@@ -1,24 +1,29 @@
 import os
 import random
+import numpy as np
+import torch
+from torch_geometric.data import Data
+
 
 from .data import Dictionary
 
 def create_entrels(data_dir,result_dir):
     tags_list = ["train","valid","test"]
-    entities_dict = Dictionary()
-    relations_dict = Dictionary()
-    for file_tag in tags_list:
-        load_filename = os.path.join(data_dir,"%s.txt"%file_tag)
+    rel_dict = Dictionary()
+    ent_dict = Dictionary()
+    for tag in tags_list:
+        load_filename = os.path.join(data_dir,tag+".txt")
         with open(load_filename,mode="r",encoding="utf-8") as rfp:
             for line in rfp:
-                words = line.strip().split("\t")
-                entities_dict.add(words[0])
-                entities_dict.add(words[2])
-                relations_dict.add(words[1])
-    entities_file = os.path.join(result_dir,"entities.txt")
-    relations_file = os.path.join(result_dir,"relations.txt")
-    entities_dict.save(entities_file)
-    relations_dict.save(relations_file)
+                out = line.strip().split("\t")
+                ent_dict.add(out[0])
+                rel_dict.add(out[1])
+                ent_dict.add(out[2])
+    ent_filename = os.path.join(result_dir,"entities.txt")
+    rel_filename = os.path.join(result_dir,"relations.txt")
+    ent_dict.save(ent_filename)
+    rel_dict.save(rel_filename)
+
 def create_pos_neg_ids(load_filename,save_filename,ent_dict,rel_dict,generate_negs = False):
     all_data_list = []
     if generate_negs:
@@ -69,3 +74,31 @@ def create_pos_neg_ids(load_filename,save_filename,ent_dict,rel_dict,generate_ne
         for item in all_data_list:
             str_line = "%d\t%d\t%d\t%d\t\n"%(item[0],item[1],item[2],item[3])
             wfp.write(str_line)
+
+def build_graph(result_dir,tags_list):
+    edge_index = []
+    edge_attr = []
+    for tag in tags_list:
+        load_filename = os.path.join(result_dir,tag+"2id.txt")
+        with open(load_filename,mode="r",encoding="utf-8") as rfp:
+            for line in rfp:
+                out = [int(item) for item in line.strip().split("\t")]
+                if out[-1] == 1:
+                    head,rel,tail = out[:3]
+                    edge_index.append([head,tail])
+                    edge_attr.append(rel)
+                else:
+                    pass
+    edge_index = np.array(edge_index,dtype=np.int64)
+    edge_attr = np.array(edge_attr,dtype=np.int64)
+    graph = Data(edge_index=edge_index,edge_attr=edge_attr)
+    return graph
+def load_dataset(file_name):
+    with open(file_name,mode="r",encoding="utf-8") as rfp:
+        data_list = []
+        for line in rfp:
+            out = [int(t) for t in line.strip().split("\t")]
+            out[-1] = 0 if out[-1]==-1 else 1
+            data_list.append(out)
+    return data_list
+

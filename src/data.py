@@ -1,8 +1,13 @@
+import torch
+
+from typing import Callable, List, Optional
+from torch_geometric.data import Data, InMemoryDataset
+
 # the dictionary of the relation and entity
 class Dictionary:
-    def __init__(self,unk_token= "UNK_VAL"):
-        self.words2id = {unk_token:0}
-        self.id2words = [unk_token]
+    def __init__(self):
+        self.words2id = {}
+        self.id2words = []
         self.start_id = -1
     def add(self,word):
         if word not in self.words2id:
@@ -51,3 +56,11 @@ class Dictionary:
                 write_line = "%d\t%s\n"%(idx,key)
                 wfp.write(write_line)
 
+class EntRelTripletsDataset(torch.utils.data.Dataset):
+    def __init__(self,dataset):
+        super(EntRelTripletsDataset,self).__init__()
+        self.dataset = dataset
+    def __getitem__(self,idx):
+        return self.dataset[idx]
+    def __len__(self):
+        return len(self.dataset)
