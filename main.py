@@ -11,11 +11,9 @@ from torch_geometric.data import Data
 
 from config import check_args,get_args,load_config
 from src.data import Dictionary
-from src.utils import build_graph,load_dataset
+from src.utils import build_graph,load_dataset,to_var
 from src.model import KGTConv
-def to_var(item,device):
-    for k in range(len(item)):
-        item[k] = item[k].to(device)
+
 def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     result_dir = os.path.join(args.result_dir,args.dataset)
@@ -41,6 +39,7 @@ def main(args):
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
     for epoch in range(args.epoches):
+        model.train()
         graph.edge_index = graph.edge_index.to(device)
         graph.x = graph.x.to(device)
         model.graph_forward(graph.x,graph.edge_index)
@@ -52,6 +51,8 @@ def main(args):
             loss = loss_fn(logits,target)
             loss.backward()
             optimizer.step()
+        evaluate_model(model)
+
 if __name__ == "__main__":
     args = get_args()
     check_args(args)

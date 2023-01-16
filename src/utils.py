@@ -5,7 +5,10 @@ import torch
 from torch_geometric.data import Data
 
 from .data import Dictionary
-
+def to_var(item,device):
+    for k in range(len(item)):
+        item[k] = item[k].to(device)
+        
 def create_entrels(data_dir,result_dir):
     tags_list = ["train","valid","test"]
     rel_dict = Dictionary()
