@@ -33,17 +33,30 @@ class KGTConv(nn.Module):
         self.fa_net = FAPagateNet(config.k_fa,config.fa_rho,config.fa_alpha,config.fa_dropout)
         self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels)
         self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
-    def forward(self,head,rel,tail,edge_index):
-        h_emb = self.ent_emb(head)
-        t_emb = self.ent_emb(tail)
-        h_emb = self.appnet(h_emb,edge_index)
-        t_emb = self.appnet(h_emb,edge_index,backward=True)
-        print(h_emb.shape,t_emb.shape)
-    def graph_forward(self,x,edge_type,edge_index):
+        # the feaures
+        self.rg_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
+        self.ap_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
+        self.fa_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
+        # the mlp layer
+        self.fnn = FNNNet(config.emb_dim*6,config.emb_dim,2)
+    def forward(self,head,tail):
+        """
+        head:(batch_size,)
+        tail:(batch_size,)
+        """
+        h_rg_emb = self.rg_feature[head]
+        h_ap_emb = self.ap_feature[head]
+        h_fa_emb = self.fa_feature[head]
+
+        t_rg_emb = self.rg_feature[tail]
+        t_ap_emb = self.ap_feature[tail]
+        t_fa_emb = self.fa_feature[tail]
+        o_emb = torch.cat([h_rg_emb,t_rg_emb,h_ap_emb,t_ap_emb,h_fa_emb,t_fa_emb],dim=1)
+        logits = self.fnn(o_emb)
+        return F.softmax(logits)
+    def graph_forward(self,x,edge_index,edge_type):
         x_emb = self.ent_emb(x)
-        print(x_emb.shape,edge_index.shape)
-        #e_fea = self.fa_net(x_emb,edge_index)
-        #app_fea = self.appnet(x_emb,edge_index)
-        x_emb = self.rgcn(x_emb,edge_index,edge_type)
-        print(x_emb.shape)
+        self.fa_feature.data = self.fa_net(x_emb,edge_index)
+        self.ap_feature.data = self.appnet(x_emb,edge_index)
+        self.rg_feature.data = self.rgcn(x_emb,edge_index,edge_type)
         

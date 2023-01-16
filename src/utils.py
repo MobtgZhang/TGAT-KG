@@ -94,7 +94,8 @@ def build_graph(result_dir,tags_list):
     edge_index = torch.tensor(edge_index,dtype=torch.long).T
     edge_attr = torch.tensor(edge_attr,dtype=torch.long)
     node_index = torch.tensor(node_index,dtype=torch.long)
-    graph = Data(edge_index=edge_index,edge_attr=edge_attr)
+    graph = Data(x=node_index,edge_index=edge_index)
+    graph.edge_type = edge_attr
     return graph
 def load_dataset(file_name):
     with open(file_name,mode="r",encoding="utf-8") as rfp:

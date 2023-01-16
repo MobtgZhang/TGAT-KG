@@ -4,6 +4,8 @@ import logging
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.optim as optim
+
 from torch.utils.data import DataLoader
 from torch_geometric.data import Data
 
@@ -27,8 +29,6 @@ def main(args):
     train_set = load_dataset(load_train_file)
     valid_set = load_dataset(load_valid_file)
     graph = build_graph(result_dir,tags_list=["train","valid"])
-    
-    
     # create the graph
     train_loader = DataLoader(train_set,batch_size=args.batch_size,shuffle=True)
     test_loader = DataLoader(valid_set,batch_size=args.batch_size,shuffle=True)
@@ -39,19 +39,19 @@ def main(args):
     config.num_rels = len(rel_dict)
     model = KGTConv(config).to(device)
     loss_fn = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
     for epoch in range(args.epoches):
         graph.edge_index = graph.edge_index.to(device)
         graph.x = graph.x.to(device)
         model.graph_forward(graph.x,graph.edge_index)
-        exit()
         for item in train_loader:
+            optimizer.zero_ragd()
             to_var(item,device)
             head,rel,tail,target = item
-            loss = model(head,rel,tail,graph.edge_index)
-            exit()
-    #graph = build_graph(result_dir,["train","valid"])
-    #print(graph)
-    
+            logits = model(head,rel,tail,graph.edge_index)
+            loss = loss_fn(logits,target)
+            loss.backward()
+            optimizer.step()
 if __name__ == "__main__":
     args = get_args()
     check_args(args)

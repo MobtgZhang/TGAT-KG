@@ -25,7 +25,7 @@ class PRbinaryHop(MessagePassing):
     def reset_parameters(self):
         self._cached_edge_index = None
         self._cached_adj_t = None
-    def forward(self, x, edge_index,edge_weight=None,backward=False):
+    def forward(self, x, edge_index,edge_weight=None):
         if self.normalize:
             if isinstance(edge_index, Tensor):
                 cache = self._cached_edge_index
@@ -65,10 +65,11 @@ class PRbinaryHop(MessagePassing):
                                size=None)
             y = self.propagate(edge_index, x=x, edge_weight=edge_weight,
                                size=None)
-            if backward:
-                x = self.alpha*h + (1-self.alpha)*((1 - self.beta)*x+ self.beta * y)
-            else:
-                x = self.beta*y + (1-self.beta)*((1 - self.alpha)*x+ self.alpha * h)
+            # if backward:
+                # x = self.alpha*h + (1-self.alpha)*((1 - self.beta)*x+ self.beta * y)
+            # else:
+                # x = self.beta*y + (1-self.beta)*((1 - self.alpha)*x+ self.alpha * h)
+            x = self.beta*y + (1-self.beta)*((1 - self.alpha)*x+ self.alpha * h)
         return x
 
     def message(self, x_j, edge_weight):
