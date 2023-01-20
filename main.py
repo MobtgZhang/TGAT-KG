@@ -13,6 +13,7 @@ from config import check_args,get_args,load_config
 from src.data import Dictionary
 from src.utils import build_graph,load_dataset,to_var
 from src.model import KGTConv
+from src.eval import evaluate_model
 
 def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -42,16 +43,20 @@ def main(args):
         model.train()
         graph.edge_index = graph.edge_index.to(device)
         graph.x = graph.x.to(device)
-        model.graph_forward(graph.x,graph.edge_index)
+        model.graph_forward(graph.x,graph.edge_index,graph.edge_type)
+        loss_avg = 0.0
         for item in train_loader:
             optimizer.zero_ragd()
             to_var(item,device)
             head,rel,tail,target = item
-            logits = model(head,rel,tail,graph.edge_index)
+            logits = model(head,rel,tail)
             loss = loss_fn(logits,target)
+            loss_avg += loss.item()
             loss.backward()
             optimizer.step()
-        evaluate_model(model)
+        loss_avg /= len(train_loader)
+        print("epoch index: %d ,loss value: %0.4f ."%(epoch,loss_avg))
+        evaluate_model(model,loss_fn,graph,test_loader,device)
 
 if __name__ == "__main__":
     args = get_args()

@@ -39,7 +39,7 @@ class KGTConv(nn.Module):
         self.fa_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         # the mlp layer
         self.fnn = FNNNet(config.emb_dim*6,config.emb_dim,2)
-    def forward(self,head,tail):
+    def forward(self,head,rel,tail):
         """
         head:(batch_size,)
         tail:(batch_size,)
