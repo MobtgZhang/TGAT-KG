@@ -1,8 +1,4 @@
 emb_dim: 20
-k_fa: 20
-fa_rho: 0.9
-fa_alpha: 0.1
-fa_dropout: 0.2
 k_pr: 10
 pr_alpha: 0.95
 pr_beta: 0.999
