@@ -65,11 +65,7 @@ class PRbinaryHop(MessagePassing):
                                size=None)
             y = self.propagate(edge_index, x=x, edge_weight=edge_weight,
                                size=None)
-            # if backward:
-                # x = self.alpha*h + (1-self.alpha)*((1 - self.beta)*x+ self.beta * y)
-            # else:
-                # x = self.beta*y + (1-self.beta)*((1 - self.alpha)*x+ self.alpha * h)
-            x = self.beta*y + (1-self.beta)*((1 - self.alpha)*x+ self.alpha * h)
+            x = (1-self.beta)*y + self.beta*((1 - self.alpha)*x+ self.alpha * h)
         return x
 
     def message(self, x_j, edge_weight):

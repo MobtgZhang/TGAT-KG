@@ -30,6 +30,7 @@ class KGTConv(nn.Module):
         self.pr_beta = config.pr_beta
         self.pr_dropout = config.pr_dropout
         self.ent_emb = nn.Embedding(config.num_ents,config.emb_dim)
+        self.rel_emb = nn.Embedding(config.num_rels,config.emb_dim)
         self.fa_net = FAPagateNet(config.k_fa,config.fa_rho,config.fa_alpha,config.fa_dropout)
         self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels)
         self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
@@ -38,20 +39,24 @@ class KGTConv(nn.Module):
         self.ap_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         self.fa_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         # the mlp layer
-        self.fnn = FNNNet(config.emb_dim*6,config.emb_dim,2)
+        tmp_emb = (config.emb_dim*2)*3+config.emb_dim
+        self.fnn = FNNNet(tmp_emb,config.emb_dim,2)
+    def transE_score(self,head,rel,tail):
+        h_emb = self.ent_emb[head]
+        r_emb = self.rel_emb[rel]
+        t_emb = self.ent_emb[tail]
+        s_emb = h_emb + r_emb - t_emb
+        return torch.sigmoid(s_emb)
     def forward(self,head,rel,tail):
         """
         head:(batch_size,)
         tail:(batch_size,)
         """
-        h_rg_emb = self.rg_feature[head]
-        h_ap_emb = self.ap_feature[head]
-        h_fa_emb = self.fa_feature[head]
-
-        t_rg_emb = self.rg_feature[tail]
-        t_ap_emb = self.ap_feature[tail]
-        t_fa_emb = self.fa_feature[tail]
-        o_emb = torch.cat([h_rg_emb,t_rg_emb,h_ap_emb,t_ap_emb,h_fa_emb,t_fa_emb],dim=1)
+        rg_emb = torch.cat([self.rg_feature[head],self.rg_feature[tail]],dim=1)
+        ap_emb = torch.cat([self.ap_feature[head],self.ap_feature[tail]],dim=1)
+        fa_emb = torch.cat([self.fa_feature[head],self.fa_feature[tail]],dim=1)
+        s_emb = self.transE_score(head,rel,tail)
+        o_emb = torch.cat([rg_emb,ap_emb,fa_emb,s_emb],dim=1)
         logits = self.fnn(o_emb)
         return F.softmax(logits)
     def graph_forward(self,x,edge_index,edge_type):
