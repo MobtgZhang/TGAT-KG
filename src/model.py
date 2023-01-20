@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import RGCNConv
+from .rgcn import RGCNConv
 
 from .appnp import PRbinaryHop
 
