@@ -12,6 +12,7 @@ def get_args():
     parser.add_argument("--dataset",default="fb15k",type=str)
     parser.add_argument("--model-name",default="KGTConv",type=str)
     parser.add_argument("--epoches",default=10,type=int)
+    parser.add_argument("--max-norm",default=5.0,type=float)
     parser.add_argument("--learning-rate",default=0.01,type=float)
     args = parser.parse_args()
     return args

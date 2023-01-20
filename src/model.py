@@ -42,9 +42,9 @@ class KGTConv(nn.Module):
         tmp_emb = (config.emb_dim*2)*3+config.emb_dim
         self.fnn = FNNNet(tmp_emb,config.emb_dim,2)
     def transE_score(self,head,rel,tail):
-        h_emb = self.ent_emb[head]
-        r_emb = self.rel_emb[rel]
-        t_emb = self.ent_emb[tail]
+        h_emb = self.ent_emb(head)
+        r_emb = self.rel_emb(rel)
+        t_emb = self.ent_emb(tail)
         s_emb = h_emb + r_emb - t_emb
         return torch.sigmoid(s_emb)
     def forward(self,head,rel,tail):

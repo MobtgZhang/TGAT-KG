@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.optim as optim
+import torch.optim as optim
 
 from torch.utils.data import DataLoader
 from torch_geometric.data import Data
@@ -46,13 +46,14 @@ def main(args):
         model.graph_forward(graph.x,graph.edge_index,graph.edge_type)
         loss_avg = 0.0
         for item in train_loader:
-            optimizer.zero_ragd()
+            optimizer.zero_grad()
             to_var(item,device)
             head,rel,tail,target = item
             logits = model(head,rel,tail)
             loss = loss_fn(logits,target)
             loss_avg += loss.item()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=args.max_norm)
             optimizer.step()
         loss_avg /= len(train_loader)
         print("epoch index: %d ,loss value: %0.4f ."%(epoch,loss_avg))
