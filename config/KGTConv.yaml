@@ -3,7 +3,7 @@ k_fa: 50
 fa_rho: 0.3
 fa_alpha: 0.4
 fa_dropout: 0.2
-k_pr: 100
-pr_alpha: 0.5
-pr_beta: 0.6
+k_pr: 20
+pr_alpha: 0.95
+pr_beta: 1.0
 pr_dropout: 0.2
