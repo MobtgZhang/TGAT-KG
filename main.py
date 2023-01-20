@@ -43,6 +43,7 @@ def main(args):
         model.train()
         graph.edge_index = graph.edge_index.to(device)
         graph.x = graph.x.to(device)
+        graph.edge_type = graph.edge_type.to(device)
         model.graph_forward(graph.x,graph.edge_index,graph.edge_type)
         loss_avg = 0.0
         for item in train_loader:
