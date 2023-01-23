@@ -1,4 +1,27 @@
+import torch
+import torch.nn as nn
+
 from .utils import to_var
+class FBetaModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(predict,target):
+        pass
+class PreCallModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self,predict,target):
+        pass
+class ReCallModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self,predict,target):
+        pass
+class AccModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self,predict,target):
+        pass
 
 def evaluate_model(model,loss_fn,graph,data_loader,device):
     model.eval()
