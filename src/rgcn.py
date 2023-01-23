@@ -8,6 +8,7 @@ def uniform(size, tensor):
     bound = 1.0 / math.sqrt(size)
     if tensor is not None:
         tensor.data.uniform_(-bound, bound)
+
 class RGCNConv(MessagePassing):
     def __init__(self, in_channels, out_channels, num_relations, num_bases,
                  root_weight=True, bias=True, **kwargs):
