@@ -21,16 +21,19 @@ def main(args):
     # create dataset 
     load_train_file = os.path.join(result_dir,"train2id.txt")
     load_valid_file = os.path.join(result_dir,"valid2id.txt")
+    load_test_file = os.path.join(result_dir,"valid2id.txt")
     ent_filename = os.path.join(result_dir,"entities.txt")
     rel_filename = os.path.join(result_dir,"relations.txt")
     ent_dict = Dictionary.load(ent_filename)
     rel_dict = Dictionary.load(rel_filename)
     train_set = load_dataset(load_train_file)
     valid_set = load_dataset(load_valid_file)
+    test_set = load_dataset(load_test_file)
     graph = build_graph(result_dir,tags_list=["train","valid"])
     # create the graph
     train_loader = DataLoader(train_set,batch_size=args.batch_size,shuffle=True)
-    test_loader = DataLoader(valid_set,batch_size=args.batch_size,shuffle=True)
+    valid_loader = DataLoader(valid_set,batch_size=args.batch_size,shuffle=True)
+    test_loader = DataLoader(test_set,batch_size=args.batch_size,shuffle=True)
     # load config and create model
     config_file = os.path.join(args.config_dir,args.model_name+".yaml")
     config = load_config(config_file)
@@ -57,9 +60,14 @@ def main(args):
             torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=args.max_norm)
             optimizer.step()
         loss_avg /= len(train_loader)
-        print("epoch index: %d ,loss value: %0.4f ."%(epoch,loss_avg))
-        evaluate_model(model,loss_fn,graph,test_loader,device)
-
+        valid_dict = evaluate_model(model,loss_fn,graph,test_loader,device)
+        test_dict = evaluate_model(model,loss_fn,graph,valid_loader,device)
+        logger.info("train loss average:%0.4f"%loss_avg)
+        logger.info("test set\tF1-macro:%0.4f,F1-micro:%0.4f,accuracy:%0.4f,loss:%0.4f"%
+                        (test_dict["f1-macro"],test_dict["f1-micro"],test_dict["acc"],test_dict["loss"]))
+        logger.info("valid set\tF1-macro:%0.4f,F1-micro:%0.4f,accuracy:%0.4f,loss:%0.4f"%
+                        (valid_dict["f1-macro"],valid_dict["f1-micro"],valid_dict["acc"],valid_dict["loss"]))
+        
 if __name__ == "__main__":
     args = get_args()
     check_args(args)

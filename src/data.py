@@ -6,8 +6,8 @@ from torch_geometric.data import Data, InMemoryDataset
 # the dictionary of the relation and entity
 class Dictionary:
     def __init__(self):
-        self.words2id = {}
-        self.id2words = []
+        self.words2id = {"[UNK-TOKEN]":0}
+        self.id2words = ["[UNK-TOKEN]"]
         self.start_id = -1
     def add(self,word):
         if word not in self.words2id:
