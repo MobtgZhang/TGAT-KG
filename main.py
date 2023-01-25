@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
 
 from torch.utils.data import DataLoader
 from torch_geometric.data import Data
@@ -42,7 +43,7 @@ def main(args):
     model = KGTConv(config).to(device)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
-    for epoch in range(args.epoches):
+    for epoch in tqdm(range(args.epoches),desc="training"):
         model.train()
         graph.edge_index = graph.edge_index.to(device)
         graph.x = graph.x.to(device)
@@ -60,8 +61,8 @@ def main(args):
             torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=args.max_norm)
             optimizer.step()
         loss_avg /= len(train_loader)
-        valid_dict = evaluate_model(model,loss_fn,graph,valid_loader,device)
-        test_dict = evaluate_model(model,loss_fn,graph,test_loader,device)
+        valid_dict = evaluate_model(model,loss_fn,graph,valid_loader,"valid set",device)
+        test_dict = evaluate_model(model,loss_fn,graph,test_loader,"test set",device)
         logger.info("train loss average:%0.4f"%loss_avg)
         logger.info("test set\tF1-macro:%0.4f,F1-micro:%0.4f,accuracy:%0.4f,loss:%0.4f"%
                         (test_dict["f1-macro"],test_dict["f1-micro"],test_dict["acc"],test_dict["loss"]))
