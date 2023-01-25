@@ -26,7 +26,7 @@ class KGTConv(nn.Module):
         self.pr_dropout = config.pr_dropout
         self.ent_emb = nn.Embedding(config.num_ents,config.emb_dim)
         self.rel_emb = nn.Embedding(config.num_rels,config.emb_dim)
-        self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels)
+        self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels,config.num_bases)
         self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
         # the feaures
         self.rg_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)

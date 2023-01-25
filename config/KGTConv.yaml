@@ -3,3 +3,4 @@ k_pr: 10
 pr_alpha: 0.65
 pr_beta: 0.9
 pr_dropout: 0.2
+num_bases: 10
