@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument("--log-dir",default="./log",type=str)
     parser.add_argument("--data-dir",default="./data",type=str)
     parser.add_argument("--config-dir",default="./config",type=str)
-    parser.add_argument("--batch-size",default=20,type=int)
+    parser.add_argument("--batch-size",default=1024,type=int)
     parser.add_argument("--dataset",default="fb15k",type=str)
     parser.add_argument("--model-name",default="KGTConv",type=str)
     parser.add_argument("--epoches",default=10,type=int)
