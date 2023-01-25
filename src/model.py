@@ -50,7 +50,7 @@ class KGTConv(nn.Module):
         s_emb = self.transE_score(head,rel,tail)
         o_emb = torch.cat([rg_emb,ap_emb,s_emb],dim=1)
         logits = self.fnn(o_emb)
-        return F.softmax(logits)
+        return F.softmax(logits,dim=1)
     def graph_forward(self,x,edge_index,edge_type):
         x_emb = self.ent_emb(x)
         self.ap_feature.data = self.appnet(x_emb,edge_index)
