@@ -21,7 +21,7 @@ def main(args):
     # create dataset 
     load_train_file = os.path.join(result_dir,"train2id.txt")
     load_valid_file = os.path.join(result_dir,"valid2id.txt")
-    load_test_file = os.path.join(result_dir,"valid2id.txt")
+    load_test_file = os.path.join(result_dir,"test2id.txt")
     ent_filename = os.path.join(result_dir,"entities.txt")
     rel_filename = os.path.join(result_dir,"relations.txt")
     ent_dict = Dictionary.load(ent_filename)
@@ -60,8 +60,8 @@ def main(args):
             torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=args.max_norm)
             optimizer.step()
         loss_avg /= len(train_loader)
-        valid_dict = evaluate_model(model,loss_fn,graph,test_loader,device)
-        test_dict = evaluate_model(model,loss_fn,graph,valid_loader,device)
+        valid_dict = evaluate_model(model,loss_fn,graph,valid_loader,device)
+        test_dict = evaluate_model(model,loss_fn,graph,test_loader,device)
         logger.info("train loss average:%0.4f"%loss_avg)
         logger.info("test set\tF1-macro:%0.4f,F1-micro:%0.4f,accuracy:%0.4f,loss:%0.4f"%
                         (test_dict["f1-macro"],test_dict["f1-micro"],test_dict["acc"],test_dict["loss"]))

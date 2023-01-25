@@ -15,9 +15,9 @@ def evaluate_model(model,loss_fn,graph,data_loader,name,device):
     for idx,item in time_bar:
         to_var(item,device)
         head,rel,tail,targets = item
-        logits = model(head,rel,tail,graph.edge_index)
+        logits = model(head,rel,tail)
         loss = loss_fn(logits,targets)
-        predicts = torch.argmax(predicts,dim=-1)
+        predicts = torch.argmax(logits,dim=-1)
         all_loss += loss.item()
         y_pred.append(predicts)
         y_true.append(targets)
