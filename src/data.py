@@ -1,8 +1,5 @@
 import torch
 
-from typing import Callable, List, Optional
-from torch_geometric.data import Data, InMemoryDataset
-
 # the dictionary of the relation and entity
 class Dictionary:
     def __init__(self):

@@ -55,4 +55,4 @@ class KGTConv(nn.Module):
         x_emb = self.ent_emb(x)
         self.ap_feature.data = self.appnet(x_emb,edge_index)
         self.rg_feature.data = self.rgcn(x_emb,edge_index,edge_type)
-        
+
