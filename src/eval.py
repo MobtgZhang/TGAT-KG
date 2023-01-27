@@ -1,10 +1,11 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score,f1_score
 from tqdm import tqdm
 from .utils import to_var
 
-def evaluate_model(model,loss_fn,graph,data_loader,name,device):
+def evaluate_model(model,loss_fn,data_loader,name,device):
     model.eval()
 
     all_loss = 0.0
@@ -29,10 +30,10 @@ def evaluate_model(model,loss_fn,graph,data_loader,name,device):
     all_emval = accuracy_score(y_true,y_pred)
     all_loss /= len(data_loader)
     data_dict = {
-        "f1-macro":all_f1_macro,
-        "f1-micro":all_f1_micro,
-        "acc":all_emval,
-        "loss":all_loss
+        "f1-macro":np.around(all_f1_macro,decimals=4),
+        "f1-micro":np.around(all_f1_micro,decimals=4),
+        "acc":np.around(all_emval,decimals=4),
+        "loss":np.around(all_loss,decimals=4)
     }
     return data_dict
 

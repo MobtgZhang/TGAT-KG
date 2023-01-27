@@ -50,7 +50,6 @@ class RGCNConv(MessagePassing):
 
     def message(self, x_j, edge_index_j, edge_type, edge_norm):
         w = torch.matmul(self.att, self.basis.view(self.num_bases, -1))
-
         # If no node features are given, we implement a simple embedding
         # loopkup based on the target node index and its edge type.
         if x_j is None:

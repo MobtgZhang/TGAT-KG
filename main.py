@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import Data
 
 from config import check_args,get_args,load_config
-from src.data import Dictionary
+from src.data import Dictionary,DataSaver
 from src.utils import build_graph,load_dataset,to_var
 from src.model import KGTConv
 from src.eval import evaluate_model
@@ -19,6 +19,7 @@ from src.eval import evaluate_model
 def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     result_dir = os.path.join(args.result_dir,args.dataset)
+    log_dir = os.path.join(args.log_dir,args.dataset)
     # create dataset 
     load_train_file = os.path.join(result_dir,"train2id.txt")
     load_valid_file = os.path.join(result_dir,"valid2id.txt")
@@ -43,6 +44,10 @@ def main(args):
     model = KGTConv(config).to(device)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
+    save_valid_file = os.path.join(log_dir,args.time_step_str + "-valid.csv")
+    save_test_file = os.path.join(log_dir,args.time_step_str + "-test.csv")
+    valid_saver = DataSaver(save_valid_file)
+    test_saver = DataSaver(save_test_file)
     for epoch in tqdm(range(args.epoches),desc="training"):
         model.train()
         graph.edge_index = graph.edge_index.to(device)
@@ -61,9 +66,16 @@ def main(args):
             torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=args.max_norm)
             optimizer.step()
         loss_avg /= len(train_loader)
-        valid_dict = evaluate_model(model,loss_fn,graph,valid_loader,"valid set",device)
-        test_dict = evaluate_model(model,loss_fn,graph,test_loader,"test set",device)
-        logger.info("train loss average:%0.4f"%loss_avg)
+        # the valid results
+        valid_saver.start()
+        valid_dict = evaluate_model(model,loss_fn,valid_loader,"valid set",device)
+        valid_saver.add(valid_dict)
+        # the test results
+        test_saver.start()
+        test_dict = evaluate_model(model,loss_fn,test_loader,"test set",device)
+        test_saver.add(test_dict)
+        # print the results to the console
+        logger.info("train loss average:%0.4f"%loss_avg)        
         logger.info("test set\tF1-macro:%0.4f,F1-micro:%0.4f,accuracy:%0.4f,loss:%0.4f"%
                         (test_dict["f1-macro"],test_dict["f1-micro"],test_dict["acc"],test_dict["loss"]))
         logger.info("valid set\tF1-macro:%0.4f,F1-micro:%0.4f,accuracy:%0.4f,loss:%0.4f"%

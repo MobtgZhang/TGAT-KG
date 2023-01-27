@@ -1,3 +1,5 @@
+import time
+import pandas as pd
 import torch
 
 # the dictionary of the relation and entity
@@ -61,3 +63,18 @@ class EntRelTripletsDataset(torch.utils.data.Dataset):
         return self.dataset[idx]
     def __len__(self):
         return len(self.dataset)
+class DataSaver:
+    def __init__(self,save_filename):
+        self.data_list = []
+        self.start_time = None
+        self.filename = save_filename
+    def add(self,data_dict):
+        assert self.start_time is not None
+        end_time = time.time()
+        data_dict["time"] = round(end_time-self.start_time)
+        self.data_list.append(data_dict)
+        all_data = pd.DataFrame.from_dict(self.data_list, orient='columns')
+        all_data.to_csv(self.save_filename,index=None)
+        self.start_time = None
+    def start(self):
+        self.start_time = time.time()
