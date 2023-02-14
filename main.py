@@ -13,7 +13,7 @@ from torch_geometric.data import Data
 from config import check_args,get_args,load_config
 from src.data import Dictionary,DataSaver
 from src.utils import build_graph,load_dataset,to_var
-from src.model import KGTConv
+from src.kgtconv import KGTConv
 from src.eval import evaluate_model
 
 def main(args):
