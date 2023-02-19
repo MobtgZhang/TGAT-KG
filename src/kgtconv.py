@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from .rgcn import RGCNConv
 
 from .appnp import PRbinaryHop
+from .attpr import PRGATConv
 
 class FNNNet(nn.Module):
     def __init__(self,in_dim,hid_dim,out_dim):
@@ -27,7 +28,9 @@ class KGTConv(nn.Module):
         self.ent_emb = nn.Embedding(config.num_ents,config.emb_dim)
         self.rel_emb = nn.Embedding(config.num_rels,config.emb_dim)
         self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels,config.num_bases)
-        self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
+        self.appnet = PRGATConv(in_channels=config.emb_dim,out_channels=config.out_dim,heads=config.heads,
+                                alpha=config.pr_alpha,beta=config.pr_beta,dropout=config.pr_dropout,k_loops=config.k_pr)
+        # self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
         # the feaures
         self.rg_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         self.ap_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
