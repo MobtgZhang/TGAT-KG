@@ -70,11 +70,13 @@ class DataSaver:
         self.filename = save_filename
     def add(self,data_dict):
         assert self.start_time is not None
-        end_time = time.time()
+        end_time = time.clock()
         data_dict["time"] = round(end_time-self.start_time)
         self.data_list.append(data_dict)
         all_data = pd.DataFrame.from_dict(self.data_list, orient='columns')
         all_data.to_csv(self.filename,index=None)
         self.start_time = None
     def start(self):
-        self.start_time = time.time()
+        self.start_time = time.clock()
+
+
