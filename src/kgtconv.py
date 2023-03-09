@@ -17,6 +17,7 @@ class FNNNet(nn.Module):
 class KGTConv(nn.Module):
     def __init__(self,config):
         super(KGTConv,self).__init__()
+        assert config.model_type in ["pr","prgat"]
         self.num_ents = config.num_ents
         self.num_rels = config.num_rels
         self.emb_dim = config.emb_dim
@@ -28,9 +29,13 @@ class KGTConv(nn.Module):
         self.ent_emb = nn.Embedding(config.num_ents,config.emb_dim)
         self.rel_emb = nn.Embedding(config.num_rels,config.emb_dim)
         self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels,config.num_bases)
-        self.appnet = PRGATConv(in_channels=config.emb_dim,out_channels=config.out_dim,heads=config.heads,
+        if config.model_type == "prgat":
+            self.appnet = PRGATConv(in_channels=config.emb_dim,out_channels=config.out_dim,heads=config.heads,
                                 alpha=config.pr_alpha,beta=config.pr_beta,dropout=config.pr_dropout,k_loops=config.k_pr)
-        # self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
+        elif config.model_type == "pr":
+            self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
+        else:
+            raise ValueError("Error for the model type: %s"%str(config.model_type))
         # the feaures
         self.rg_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         self.ap_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)

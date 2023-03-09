@@ -198,6 +198,7 @@ class PRGATConv(MessagePassing):
 
     def __repr__(self) -> str:
         return (f'{self.__class__.__name__}({self.in_channels}, '
-                f'{self.out_channels}, heads={self.heads})')
+                f'{self.out_channels}, heads={self.heads},'
+                f'k_loops={self.k_loops})')
 
 

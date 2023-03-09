@@ -47,7 +47,6 @@ class RGCNConv(MessagePassing):
         return self.propagate(edge_index, size=size, x=x, edge_type=edge_type,
                               edge_norm=edge_norm)
 
-
     def message(self, x_j, edge_index_j, edge_type, edge_norm):
         w = torch.matmul(self.att, self.basis.view(self.num_bases, -1))
         # If no node features are given, we implement a simple embedding
