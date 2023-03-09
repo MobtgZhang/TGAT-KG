@@ -5,6 +5,7 @@ from .rgcn import RGCNConv
 
 from .appnp import PRbinaryHop
 from .attpr import PRGATConv
+from .bpappnp import BbAPPNP
 
 class FNNNet(nn.Module):
     def __init__(self,in_dim,hid_dim,out_dim):
@@ -17,7 +18,7 @@ class FNNNet(nn.Module):
 class KGTConv(nn.Module):
     def __init__(self,config):
         super(KGTConv,self).__init__()
-        assert config.model_type in ["pr","prgat"]
+        assert config.model_type in ["pr","prgat","prdrop"]
         self.num_ents = config.num_ents
         self.num_rels = config.num_rels
         self.emb_dim = config.emb_dim
@@ -34,6 +35,8 @@ class KGTConv(nn.Module):
                                 alpha=config.pr_alpha,beta=config.pr_beta,dropout=config.pr_dropout,k_loops=config.k_pr)
         elif config.model_type == "pr":
             self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
+        elif config.model_type == "prdrop":
+            self.appnet = BbAPPNP(K=config.k_pr,alpha=config.pr_alpha)
         else:
             raise ValueError("Error for the model type: %s"%str(config.model_type))
         # the feaures
