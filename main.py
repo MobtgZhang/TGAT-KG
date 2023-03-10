@@ -41,7 +41,12 @@ def main(args):
     config = load_config(config_file)
     config.num_ents = len(ent_dict)
     config.num_rels = len(rel_dict)
-    model = KGTConv(config).to(device)
+    if args.model == "MixKGATConv":
+        pass
+    elif args.model == "KGATConv":
+        model = KGTConv(config).to(device)
+    else:
+        raise ValueError("Unknown model name: %s"%args.model)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
     save_valid_file = os.path.join(log_dir,args.time_step_str + "-valid.csv")

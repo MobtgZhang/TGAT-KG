@@ -16,9 +16,9 @@ class FNNNet(nn.Module):
     def forward(self,inpx):
         hid = F.relu(self.lin(inpx))
         return self.op(hid)
-class KGTConv(nn.Module):
+class MixKGATConv(nn.Module):
     def __init__(self,config):
-        super(KGTConv,self).__init__()
+        super(MixKGATConv,self).__init__()
         assert config.model_type in ["pr","prgat","prdrop"]
         self.num_ents = config.num_ents
         self.num_rels = config.num_rels
