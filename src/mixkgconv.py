@@ -42,11 +42,14 @@ class KGTConv(nn.Module):
             self.appnet = BbAPPNP(K=config.k_pr,alpha=config.pr_alpha)
         else:
             raise ValueError("Error for the model type: %s"%str(config.model_type))
+        # This is the route for the GGNN model
+        self.ggnn = GatedGraphConv(config.emb_dim,num_layers=config.num_layers)
         # the feaures
         self.rg_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         self.ap_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
+        self.gn_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         # the mlp layer
-        mlp_emb = (config.emb_dim*2)*2+config.emb_dim
+        mlp_emb = (config.emb_dim*2)*3+config.emb_dim
         self.fnn = FNNNet(mlp_emb,config.emb_dim,2)
     def transE_score(self,head,rel,tail):
         h_emb = self.ent_emb(head)
@@ -59,14 +62,16 @@ class KGTConv(nn.Module):
         head:(batch_size,)
         tail:(batch_size,)
         """
-        rg_emb = torch.cat([self.rg_feature[head],self.rg_feature[tail]],dim=1)
-        ap_emb = torch.cat([self.ap_feature[head],self.ap_feature[tail]],dim=1)
-        s_emb = self.transE_score(head,rel,tail)
-        o_emb = torch.cat([rg_emb,ap_emb,s_emb],dim=1)
+        rg_emb = torch.cat([self.rg_feature[head],self.rg_feature[tail]],dim=1) # [b,2d]
+        ap_emb = torch.cat([self.ap_feature[head],self.ap_feature[tail]],dim=1) # [b,2d]
+        gn_emb = torch.cat([self.gn_feature[head],self.gn_feature[tail]],dim=1) # [b,2d]
+        s_emb = self.transE_score(head,rel,tail) # [b,d]
+        o_emb = torch.cat([rg_emb,ap_emb,s_emb,gn_emb],dim=1) # [b,7d]
         logits = self.fnn(o_emb)
         return F.softmax(logits,dim=-1)
     def graph_forward(self,x,edge_index,edge_type):
         x_emb = self.ent_emb(x)
         self.ap_feature.data = self.appnet(x_emb,edge_index)
         self.rg_feature.data = self.rgcn(x_emb,edge_index,edge_type)
+        self.gn_feature.data = self.ggnn(x_emb,edge_index)
 
