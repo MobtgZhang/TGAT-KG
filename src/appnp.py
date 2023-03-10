@@ -60,7 +60,6 @@ class PRbinaryHop(MessagePassing):
                     assert value is not None
                     value = F.dropout(value, p=self.dropout)
                     edge_index = edge_index.set_value(value, layout='coo')
-            # propagate_type: (x: Tensor, edge_weight: OptTensor)
             x = self.propagate(edge_index, x=x, edge_weight=edge_weight,
                                size=None)
             y = self.propagate(edge_index, x=x, edge_weight=edge_weight,

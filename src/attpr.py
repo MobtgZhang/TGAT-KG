@@ -1,14 +1,12 @@
 from typing import Optional, Tuple, Union
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
-from torch.nn import Parameter
 from torch_sparse import SparseTensor, set_diag
 
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.nn.dense.linear import Linear
-from torch_geometric.typing import NoneType  # noqa
 from torch_geometric.typing import Adj, OptPairTensor, OptTensor, Size
 from torch_geometric.utils import add_self_loops, remove_self_loops, softmax
 
@@ -29,7 +27,7 @@ class PRGATConv(MessagePassing):
         k_loops: int = 4,
         add_self_loops: bool = True,
         edge_dim: Optional[int] = None,
-        fill_value: Union[float, Tensor, str] = 'mean',
+        fill_value: Union[float, torch.Tensor, str] = 'mean',
         bias: bool = True,
         **kwargs,
     ):
@@ -62,21 +60,21 @@ class PRGATConv(MessagePassing):
                                   weight_initializer='glorot')
 
         # The learnable parameters to compute attention coefficients:
-        self.att_src = Parameter(torch.Tensor(1, heads, out_channels))
-        self.att_dst = Parameter(torch.Tensor(1, heads, out_channels))
+        self.att_src = nn.Parameter(torch.Tensor(1, heads, out_channels))
+        self.att_dst = nn.Parameter(torch.Tensor(1, heads, out_channels))
 
         if edge_dim is not None:
             self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False,
                                    weight_initializer='glorot')
-            self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
+            self.att_edge = nn.Parameter(torch.Tensor(1, heads, out_channels))
         else:
             self.lin_edge = None
             self.register_parameter('att_edge', None)
 
         if bias and concat:
-            self.bias = Parameter(torch.Tensor(heads * out_channels))
+            self.bias = nn.Parameter(torch.Tensor(heads * out_channels))
         elif bias and not concat:
-            self.bias = Parameter(torch.Tensor(out_channels))
+            self.bias = nn.Parameter(torch.Tensor(out_channels))
         else:
             self.register_parameter('bias', None)
         
@@ -94,7 +92,7 @@ class PRGATConv(MessagePassing):
         glorot(self.att_edge)
         zeros(self.bias)
 
-    def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
+    def forward(self, x: Union[torch.Tensor, OptPairTensor], edge_index: Adj,
                 edge_attr: OptTensor = None, size: Size = None,
                 return_attention_weights=None):
 
@@ -103,7 +101,7 @@ class PRGATConv(MessagePassing):
 
         # We first transform the input node features. If a tuple is passed, we
         # transform source and target node features via separate weights:
-        if isinstance(x, Tensor):
+        if isinstance(x, torch.Tensor):
             assert x.dim() == 2, "Static graphs not supported in 'GATConv'"
             x_src = x_dst = self.lin_src(x).view(-1, H, C)
         else:  # Tuple of source and target node features:
@@ -125,7 +123,7 @@ class PRGATConv(MessagePassing):
             alpha = (alpha_src, alpha_dst)
 
             if self.add_self_loops:
-                if isinstance(edge_index, Tensor):
+                if isinstance(edge_index, torch.Tensor):
                     # We only want to add self-loops for nodes that appear both as
                     # source and target nodes:
                     num_nodes = x_src.size(0)
@@ -166,16 +164,16 @@ class PRGATConv(MessagePassing):
             out = (1-self.beta)*out_x+self.beta*((1-self.alpha)*out_y+self.alpha*out)
 
         if isinstance(return_attention_weights, bool):
-            if isinstance(edge_index, Tensor):
+            if isinstance(edge_index, torch.Tensor):
                 return out, (edge_index, alpha)
             elif isinstance(edge_index, SparseTensor):
                 return out, edge_index.set_value(alpha, layout='coo')
         else:
             return out
 
-    def edge_update(self, alpha_j: Tensor, alpha_i: OptTensor,
-                    edge_attr: OptTensor, index: Tensor, ptr: OptTensor,
-                    size_i: Optional[int]) -> Tensor:
+    def edge_update(self, alpha_j: torch.Tensor, alpha_i: OptTensor,
+                    edge_attr: OptTensor, index: torch.Tensor, ptr: OptTensor,
+                    size_i: Optional[int]) -> torch.Tensor:
         # Given edge-level attention coefficients for source and target nodes,
         # we simply need to sum them up to "emulate" concatenation:
         alpha = alpha_j if alpha_i is None else alpha_j + alpha_i
@@ -193,12 +191,11 @@ class PRGATConv(MessagePassing):
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
         return alpha
 
-    def message(self, x_j: Tensor, alpha: Tensor) -> Tensor:
+    def message(self, x_j: torch.Tensor, alpha: torch.Tensor) -> torch.Tensor:
         return alpha.unsqueeze(-1) * x_j
 
     def __repr__(self) -> str:
         return (f'{self.__class__.__name__}({self.in_channels}, '
                 f'{self.out_channels}, heads={self.heads},'
                 f'k_loops={self.k_loops})')
-
 
