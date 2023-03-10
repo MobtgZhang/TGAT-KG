@@ -14,6 +14,7 @@ from config import check_args,get_args,load_config
 from src.data import Dictionary,DataSaver
 from src.utils import build_graph,load_dataset,to_var
 from src.kgtconv import KGTConv
+from src.mixkgconv import MixKGATConv
 from src.eval import evaluate_model
 
 def main(args):
@@ -42,7 +43,7 @@ def main(args):
     config.num_ents = len(ent_dict)
     config.num_rels = len(rel_dict)
     if args.model == "MixKGATConv":
-        pass
+        model = MixKGATConv(config).to(device)
     elif args.model == "KGATConv":
         model = KGTConv(config).to(device)
     else:
