@@ -8,10 +8,10 @@ def get_args():
     parser.add_argument("--log-dir",default="./log",type=str)
     parser.add_argument("--data-dir",default="./data",type=str)
     parser.add_argument("--config-dir",default="./config",type=str)
-    parser.add_argument("--batch-size",default=1024,type=int)
+    parser.add_argument("--batch-size",default=2048,type=int)
     parser.add_argument("--dataset",default="fb15k",type=str)
-    parser.add_argument("--model-name",default="KGTConv",type=str)
-    parser.add_argument("--epoches",default=10,type=int)
+    parser.add_argument("--model-name",default="KGATConv",type=str)
+    parser.add_argument("--epoches",default=40,type=int)
     parser.add_argument("--max-norm",default=5.0,type=float)
     parser.add_argument("--learning-rate",default=0.01,type=float)
     args = parser.parse_args()
@@ -40,6 +40,16 @@ class Configuration:
         for key in data_dict:
             if not hasattr(self,key):
                 setattr(self,key,data_dict[key])
+        self.atts = [key for key in data_dict]
+    def get_strs(self,):
+        line = ""
+        for key in self.atts:
+            line += "%s=%s, "%(key,getattr(self,key))
+        return line
+    def __str__(self):
+        return self.get_strs()
+    def __repr__(self):
+        return self.get_strs()
 def load_config(config_file):
     with open(config_file,'r',encoding='utf-8') as rfp:
         tmp_dict = yaml.load(rfp,Loader=yaml.FullLoader)

@@ -15,10 +15,12 @@ from src.data import Dictionary,DataSaver
 from src.utils import build_graph,load_dataset,to_var
 from src.kgtconv import KGTConv
 from src.mixkgconv import MixKGATConv
+from src.newconv import NewKGATConv
 from src.eval import evaluate_model
 
 def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    logger.info("The parser args is %s"%str(args))
     result_dir = os.path.join(args.result_dir,args.dataset)
     log_dir = os.path.join(args.log_dir,args.dataset)
     # create dataset 
@@ -40,14 +42,17 @@ def main(args):
     # load config and create model
     config_file = os.path.join(args.config_dir,args.model_name+".yaml")
     config = load_config(config_file)
+    logger.info("The model args is %s"%str(config))
     config.num_ents = len(ent_dict)
     config.num_rels = len(rel_dict)
-    if args.model == "MixKGATConv":
+    if args.model_name == "MixKGATConv":
         model = MixKGATConv(config).to(device)
-    elif args.model == "KGATConv":
+    elif args.model_name == "KGATConv":
         model = KGTConv(config).to(device)
+    elif args.model_name == "NewKGATConv":
+        model = NewKGATConv(config).to(device)
     else:
-        raise ValueError("Unknown model name: %s"%args.model)
+        raise ValueError("Unknown model name: %s"%args.model_name)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
     save_valid_file = os.path.join(log_dir,args.time_step_str + "-valid.csv")
@@ -96,7 +101,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     # Second step, create a handler,which is used to write to logging file.
     args.time_step_str = time.strftime("%Y%m%d%H%M",time.localtime(time.time()))
-    log_file = os.path.join(args.log_dir,args.time_step_str+".log")
+    log_file = os.path.join(args.log_dir,args.dataset,args.time_step_str+".log")
     # Third, define the output formatter
     format_str = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
     fh = logging.FileHandler(log_file, mode='w')

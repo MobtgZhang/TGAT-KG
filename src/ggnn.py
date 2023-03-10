@@ -26,8 +26,7 @@ class GatedGraphConv(MessagePassing):
         self.rnn.reset_parameters()
 
     def forward(self, x: torch.Tensor, edge_index: Adj,
-                edge_weight: OptTensor = None) -> torch.Tensor:
-        """"""
+                edge_weight: OptTensor = None):
         if x.size(-1) > self.out_channels:
             raise ValueError('The number of input channels is not allowed to '
                              'be larger than the number of output channels')
@@ -48,10 +47,10 @@ class GatedGraphConv(MessagePassing):
     def message(self, x_j: torch.Tensor, edge_weight: OptTensor):
         return x_j if edge_weight is None else edge_weight.view(-1, 1) * x_j
 
-    def message_and_aggregate(self, adj_t: SparseTensor, x: torch.Tensor) -> torch.Tensor:
+    def message_and_aggregate(self, adj_t: SparseTensor, x: torch.Tensor):
         return matmul(adj_t, x, reduce=self.aggr)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return (f'{self.__class__.__name__}({self.out_channels}, '
                 f'num_layers={self.num_layers})')
 
