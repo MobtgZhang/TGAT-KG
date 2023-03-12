@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class TransE(nn.Module):
     def __init__(self,ent_size,rel_size,emb_dim, margin=1.0, l_regular=2):
@@ -102,3 +103,23 @@ class TransH(nn.Module):
         tail_emb = tail_emb - rel_hyper * torch.sum(tail_emb * rel_hyper, dim=1, keepdim=True)
         # Step4
         return head_emb+rel_emb-tail_emb
+
+
+class TransModel(nn.Module):
+    def __init__(self,config) -> None:
+        super().__init__()
+        self.num_ents = config.num_ents
+        self.num_rels = config.num_rels
+        self.emb_dim = config.emb_dim
+        trans_dict = {
+            "TransE":TransE,
+            "TransD":TransD,
+            "TransH":TransH,
+            "TransR":TransR,
+        }
+        self.model = trans_dict[config.model_name](config.ent_size,config.rel_size,config.emb_dim)
+        self.lin = nn.Linear(config.emb_dim,2)
+    def forward(self,head,rel,tail):
+        o_emb = self.model(head,rel,tail)
+        logits = self.lin(o_emb)
+        return F.softmax(logits,dim=-1)

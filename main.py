@@ -10,7 +10,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch_geometric.data import Data
 
-from config import check_args,get_args,load_config
+from config import check_args,get_args,load_config,get_model
 from src.data import Dictionary,DataSaver
 from src.utils import build_graph,load_dataset,to_var
 from src.kgtconv import KGTConv
@@ -34,7 +34,11 @@ def main(args):
     train_set = load_dataset(load_train_file)
     valid_set = load_dataset(load_valid_file)
     test_set = load_dataset(load_test_file)
-    graph = build_graph(result_dir,tags_list=["train","valid"])
+    if "Trans" in args.model_name:
+        trans_flag = True
+    else:
+        trans_flag = False
+        graph = build_graph(result_dir,tags_list=["train","valid"])
     # create the graph
     train_loader = DataLoader(train_set,batch_size=args.batch_size,shuffle=True)
     valid_loader = DataLoader(valid_set,batch_size=args.batch_size,shuffle=True)
@@ -45,14 +49,8 @@ def main(args):
     logger.info("The model args is %s"%str(config))
     config.num_ents = len(ent_dict)
     config.num_rels = len(rel_dict)
-    if args.model_name == "MixKGATConv":
-        model = MixKGATConv(config).to(device)
-    elif args.model_name == "KGATConv":
-        model = KGTConv(config).to(device)
-    elif args.model_name == "NewKGATConv":
-        model = NewKGATConv(config).to(device)
-    else:
-        raise ValueError("Unknown model name: %s"%args.model_name)
+    model = get_model(args.model_name,config,device)
+
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
     save_valid_file = os.path.join(log_dir,args.time_step_str + "-valid.csv")
@@ -61,10 +59,11 @@ def main(args):
     test_saver = DataSaver(save_test_file)
     for epoch in tqdm(range(args.epoches),desc="training"):
         model.train()
-        graph.edge_index = graph.edge_index.to(device)
-        graph.x = graph.x.to(device)
-        graph.edge_type = graph.edge_type.to(device)
-        model.graph_forward(graph.x,graph.edge_index,graph.edge_type)
+        if not trans_flag:
+            graph.edge_index = graph.edge_index.to(device)
+            graph.x = graph.x.to(device)
+            graph.edge_type = graph.edge_type.to(device)
+            model.graph_forward(graph.x,graph.edge_index,graph.edge_type)
         loss_avg = 0.0
         for item in train_loader:
             optimizer.zero_grad()

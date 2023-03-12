@@ -9,9 +9,7 @@ from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.nn.dense.linear import Linear
 from torch_geometric.typing import Adj, OptPairTensor, OptTensor, Size
 from torch_geometric.utils import add_self_loops, remove_self_loops, softmax
-
 from torch_geometric.nn.inits import glorot, zeros
-
 
 class PRGATConv(MessagePassing):
     def __init__(

@@ -1,6 +1,11 @@
 import os
 import argparse
 import yaml
+from src.kgtconv import KGTConv
+from src.mixkgconv import MixKGATConv
+from src.newconv import NewKGATConv
+
+from src.trans import TransD,TransE,TransH,TransR
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -55,3 +60,9 @@ def load_config(config_file):
         tmp_dict = yaml.load(rfp,Loader=yaml.FullLoader)
         config = Configuration(tmp_dict)
     return config
+def get_model(model_name,config,device):
+    model_dict = {
+        "MixKGATConv":MixKGATConv(config).to(device),
+        "KGATConv":KGTConv(config).to(device),
+        "NewKGATConv":NewKGATConv(config).to(device)
+    }
