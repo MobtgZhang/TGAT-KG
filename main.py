@@ -1,21 +1,15 @@
 import os
 import time
 import logging
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-
 from torch.utils.data import DataLoader
-from torch_geometric.data import Data
 
 from config import check_args,get_args,load_config,get_model
 from src.data import Dictionary,DataSaver
 from src.utils import build_graph,load_dataset,to_var
-from src.kgtconv import KGTConv
-from src.mixkgconv import MixKGATConv
-from src.newconv import NewKGATConv
 from src.eval import evaluate_model
 
 def main(args):
@@ -49,8 +43,8 @@ def main(args):
     logger.info("The model args is %s"%str(config))
     config.num_ents = len(ent_dict)
     config.num_rels = len(rel_dict)
-    model = get_model(args.model_name,config,device)
-
+    model = get_model(args.model_name)
+    model.to(device)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(),lr=args.learning_rate)
     save_valid_file = os.path.join(log_dir,args.time_step_str + "-valid.csv")

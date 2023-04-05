@@ -60,9 +60,12 @@ def load_config(config_file):
         tmp_dict = yaml.load(rfp,Loader=yaml.FullLoader)
         config = Configuration(tmp_dict)
     return config
-def get_model(model_name,config,device):
+def get_model(args):
+    load_config_file = os.path.join(args.config_dir,args.model_name+".yaml")
+    config = load_config(load_config)
     model_dict = {
-        "MixKGATConv":MixKGATConv(config).to(device),
-        "KGATConv":KGTConv(config).to(device),
-        "NewKGATConv":NewKGATConv(config).to(device)
+        "MixKGATConv":MixKGATConv(config),
+        "KGATConv":KGTConv(config),
+        "NewKGATConv":NewKGATConv(config)
     }
+    return model_dict[args.model_name]
