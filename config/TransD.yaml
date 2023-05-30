@@ -1,0 +1,3 @@
+ent_dim: 50
+rel_dim: 30
+margin: 1.0

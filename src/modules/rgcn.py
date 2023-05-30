@@ -59,7 +59,7 @@ class RGCNConv(MessagePassing):
             w = w.view(self.num_relations, self.in_channels, self.out_channels)
             w = torch.index_select(w, 0, edge_type)
             out = torch.bmm(x_j.unsqueeze(1), w).squeeze(-2)
-
+        out = torch.relu(out)
         return out if edge_norm is None else out * edge_norm.view(-1, 1)
 
     def update(self, aggr_out, x):

@@ -22,12 +22,18 @@ def main(args):
     rel_dict = Dictionary.load(rel_filename)
     # create dataset
     tags_list = ["train","valid","test"]
+    tags_tmp_list = ["_rt","hr_","h_t"]
     for tag_name in tags_list:
         save_filename = os.path.join(result_dir,"%s2id.txt"%tag_name)
         if not os.path.exists(save_filename):
-            load_filename = os.path.join(data_dir,"%s.txt"%tag_name)
-            create_pos_neg_ids(load_filename,save_filename,ent_dict,rel_dict,True)
-        logger.info("The positive and negative tags saved in path: %s ."%(save_filename))
+            create_pos_neg_ids(tag_name,data_dir,result_dir,ent_dict,rel_dict)
+            logger.info("The positive and negative tags saved in path: %s ."%(save_filename))
+        if tag_name!="train":
+            for tag_tmp in tags_tmp_list:
+                save_filename = os.path.join(result_dir,"%s_%s.txt"%(tag_name,tag_tmp))
+                if not os.path.exists(save_filename):
+                    create_pos_neg_ids(tag_name,data_dir,result_dir,ent_dict,rel_dict)
+                logger.info("The positive and negative tags saved in path: %s ."%(save_filename))
 if __name__ == "__main__":
     args = get_args()
     check_build_args(args)

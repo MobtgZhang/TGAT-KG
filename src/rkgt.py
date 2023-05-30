@@ -54,11 +54,11 @@ class FuseUnit2(nn.Module):
         out = F.relu(torch.matmul(mat_kq,value).squeeze())
         out = self.fn3(out)
         return out
-class KGATConv(nn.Module):
+class RKGTConv(nn.Module):
     def __init__(self,config):
-        super(KGATConv,self).__init__()
+        super(RKGTConv,self).__init__()
         assert config.model_type in ["pr","prgat","prdrop"]
-        assert config.trans_type in ["TransR","TransE","TransH","TransA","TransD"]
+        # assert config.trans_type in ["TransR","TransE","TransH","TransA","TransD"]
         assert config.method_type in ["fnn","att","fnn2"]
         model_dict = {
             "TransE":TransE,
@@ -75,35 +75,37 @@ class KGATConv(nn.Module):
         self.sigmoid = config.sigmoid
         
         self.k_pr = config.k_pr
-        self.alpha = config.alpha
-        self.alpha = config.alpha
-        self.dropout = config.dropout
+        self.pr_alpha = config.pr_alpha
+        self.pr_beta = config.pr_beta
+        self.pr_dropout = config.pr_dropout
         self.transScore = model_dict[config.trans_type](config.num_ents,config.num_rels,config.emb_dim)
         # This is used for RGCN model to evaluate the relation and head,tail.
         self.rgcn = RGCNConv(config.emb_dim, config.emb_dim,config.num_rels,config.num_bases)
         # This is used for PRGATConv model to evaluate the head and tail.
         if config.model_type == "prgat":
             self.appnet = PRGATConv(in_channels=config.emb_dim,out_channels=config.out_dim,heads=config.heads,
-                                alpha=config.alpha,beta=config.alpha,dropout=config.dropout,k_loops=config.k_pr)
+                                alpha=config.pr_alpha,beta=config.pr_beta,dropout=config.pr_dropout,k_loops=config.k_pr)
             ap_dim = config.heads*config.out_dim
             mlp_dim = (config.emb_dim*2)*2+ap_dim*2+config.emb_dim
             #print(mlp_dim,config.emb_dim*2,(config.heads*config.out_dim)*2,config.emb_dim)
         elif config.model_type == "pr":
-            self.appnet = PRbinaryHop(config.k_pr,config.alpha,config.alpha,config.dropout)
+            self.appnet = PRbinaryHop(config.k_pr,config.pr_alpha,config.pr_beta,config.pr_dropout)
             ap_dim = config.emb_dim*2
             mlp_dim = (config.emb_dim*2)*2+ap_dim+config.emb_dim
         elif config.model_type == "prdrop":
-            self.appnet = BbAPPNP(K=config.k_pr,alpha=config.alpha)
+            self.appnet = BbAPPNP(K=config.k_pr,alpha=config.pr_alpha)
             ap_dim = config.emb_dim*2
             mlp_dim = config.emb_dim*2*2+ap_dim+config.emb_dim
         else:
             raise ValueError("Error for the model type: %s"%str(config.model_type))
+        
         # This is the route for the GGNN model
         self.ggnn = GatedGraphConv(config.emb_dim,num_layers=config.num_layers)
         # the feaures
         self.rg_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
-        self.ap_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,ap_dim)),requires_grad=True)
+        self.ap_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
         self.gn_feature = nn.Parameter(torch.Tensor(size=(config.num_ents,config.emb_dim)),requires_grad=True)
+        self.rel_feature = nn.Parameter(torch.Tensor(size=(config.num_rels,config.emb_dim)),requires_grad=True)
         # the mlp layer
         if config.method_type == "fnn":
             self.fnn = FNNNet(mlp_dim,config.emb_dim,2)
@@ -118,11 +120,13 @@ class KGATConv(nn.Module):
         tail:(batch_size,)
         """
         rg_emb = torch.cat([self.rg_feature[head],self.rg_feature[tail]],dim=1) 
-        ap_emb = torch.cat([self.ap_feature[head],self.ap_feature[tail]],dim=1) 
+        ap_emb = torch.cat([self.ap_feature[head],self.ap_feature[tail]],dim=1)
         gn_emb = torch.cat([self.gn_feature[head],self.gn_feature[tail]],dim=1) 
         s_emb = torch.sigmoid(self.transScore(head,rel,tail))
         
         if self.method_type == "fnn":
+            print(rg_emb.shape,ap_emb.shape,gn_emb.shape,s_emb.shape)
+            exit()
             o_emb = torch.cat([rg_emb,ap_emb,gn_emb,s_emb],dim=1)
             logits = self.fnn(o_emb)
         elif self.method_type == "att1":
